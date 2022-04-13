@@ -27,6 +27,7 @@ resource "aws_instance" "my_ec2" {
   availability_zone = "eu-west-1a"
   key_name        = aws_key_pair.my_pub_key.key_name
   user_data = file("./startup.sh")
+  iam_instance_profile = "${aws_iam_instance_profile.my_ec2_profile.name}"
   tags = {
     Name: "my-ec2"
   }
@@ -96,3 +97,63 @@ output "ip" {
 //  key_name   = "lucasko_pub_key"
 //  public_key = local_file.my_ssh_key
 //}
+
+
+resource "aws_iam_instance_profile" "my_ec2_profile" {
+  name = "my_ec2_profile"
+  role = aws_iam_role.my_ec2_iam_role.name
+}
+
+resource "aws_iam_role" "my_ec2_iam_role" {
+  name = "my_ec2_iam_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+
+resource "aws_iam_role_policy" "my_ec2_role_policy" {
+  name = "web_iam_role_policy"
+  role = "${aws_iam_role.my_ec2_iam_role.id}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+            "Effect": "Allow",
+            "Action": [
+              "s3:Get*",
+              "s3:List*",
+              "s3:PutObject",
+              "s3:DeleteObject",
+              "s3:DeleteObjectVersion"
+            ],
+            "Resource": [
+                "arn:aws:s3:::lucasko-cicd-bucket/*"
+            ]
+     },
+    {
+        "Effect": "Allow",
+        "Action": [
+          "s3:List*"
+        ],
+        "Resource": [
+            "arn:aws:s3:::*"
+        ]
+    }
+  ]
+}
+EOF
+}
