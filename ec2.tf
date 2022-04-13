@@ -50,9 +50,16 @@ resource "aws_security_group" "allow_tls" {
   vpc_id      =  "vpc-0d67f617542426bba"
 
   ingress {
-    description      = "TLS from VPC"
+    description      = "SSL to EC2"
     from_port        = 22
     to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks = ["106.1.233.151/32"]
+  }
+  ingress {
+    description      = "OpenVPN Server "
+    from_port        = 1194
+    to_port          = 1194
     protocol         = "tcp"
     cidr_blocks = ["106.1.233.151/32"]
   }
