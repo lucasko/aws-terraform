@@ -20,6 +20,10 @@
 resource "aws_instance" "my_ec2" {
   ami           = "ami-0069d66985b09d219" # eu-west-1
   instance_type = "t2.micro"
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 20
+  }
   vpc_security_group_ids = [aws_security_group.allow_tls.id]
 //subnet_id         = module.my_vpc.public_subnets[0] # ok
 //availability_zone = module.my_vpc.azs[0] # ok
@@ -32,6 +36,17 @@ resource "aws_instance" "my_ec2" {
     Name: "my-ec2"
   }
 }
+
+//resource "aws_volume_attachment" "ebs_att" {
+//  device_name = "/dev/sdh"
+//  volume_id   = aws_ebs_volume.my_volume.id
+//  instance_id = aws_instance.my_ec2.id
+//}
+//
+//resource "aws_ebs_volume" "my_volume" {
+//  availability_zone = "eu-west-1a"
+//  size              = 10
+//}
 
 data "local_file" "my_pub_key" {
   filename = "/Users/lucasko/.ssh/id_rsa.pub"
@@ -55,14 +70,44 @@ resource "aws_security_group" "allow_tls" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks = ["106.1.233.151/32"]
+    cidr_blocks = [var.my_ip]
   }
   ingress {
     description      = "OpenVPN Server "
     from_port        = 1194
     to_port          = 1194
     protocol         = "tcp"
-    cidr_blocks = ["106.1.233.151/32"]
+    cidr_blocks = [var.my_ip]
+  }
+  ingress {
+    description      = "VNC"
+    from_port        = 6901
+    to_port          = 6901
+    protocol         = "tcp"
+    cidr_blocks = [var.my_ip]
+  }
+  ingress {
+    description      = "VNC"
+    from_port        = 5901
+    to_port          = 5901
+    protocol         = "tcp"
+    cidr_blocks = [var.my_ip]
+  }
+
+  ingress {
+    description      = "VNC"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks = [var.my_ip]
+  }
+
+  ingress {
+    description      = "VNC"
+    from_port        = 8080
+    to_port          = 8080
+    protocol         = "tcp"
+    cidr_blocks = [var.my_ip]
   }
 
   egress {
